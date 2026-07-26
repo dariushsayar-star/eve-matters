@@ -19,21 +19,26 @@ export default function ParticleField({ density = 50, color = '244,196,48', clas
 
     function init() {
       resize();
-      particles = Array.from({ length: density }, () => ({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        r: Math.random() * 2.2 * pixelRatio + 0.4,
-        vy: (Math.random() * 0.35 + 0.08) * pixelRatio,
-        vx: (Math.random() - 0.5) * 0.15 * pixelRatio,
-        alpha: Math.random() * 0.6 + 0.15,
-        pulse: Math.random() * Math.PI * 2
-      }));
+      particles = Array.from({ length: density }, function () {
+        return {
+          x: Math.random() * width,
+          y: Math.random() * height,
+          r: Math.random() * 2.2 * pixelRatio + 0.4,
+          vy: (Math.random() * 0.35 + 0.08) * pixelRatio,
+          vx: (Math.random() - 0.5) * 0.15 * pixelRatio,
+          alpha: Math.random() * 0.6 + 0.15,
+          pulse: Math.random() * Math.PI * 2
+        };
+      });
     }
 
     function draw() {
-      if (!running) return;
+      if (!running) {
+        return;
+      }
       ctx.clearRect(0, 0, width, height);
-      for (const p of particles) {
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
         p.y -= p.vy;
         p.x += p.vx;
         p.pulse += 0.02;
@@ -43,9 +48,9 @@ export default function ParticleField({ density = 50, color = '244,196,48', clas
 
         const a = p.alpha * (0.6 + 0.4 * Math.sin(p.pulse));
         ctx.beginPath();
-        ctx.fillStyle = rgba(${color},${a});
+        ctx.fillStyle = 'rgba(' + color + ',' + a + ')';
         ctx.shadowBlur = 6 * pixelRatio;
-        ctx.shadowColor = rgba(${color},0.8);
+        ctx.shadowColor = 'rgba(' + color + ',0.8)';
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         ctx.fill();
       }
@@ -54,15 +59,18 @@ export default function ParticleField({ density = 50, color = '244,196,48', clas
 
     function handleVisibility() {
       running = document.visibilityState === 'visible';
-      if (running) draw();
-      else cancelAnimationFrame(raf);
+      if (running) {
+        draw();
+      } else {
+        cancelAnimationFrame(raf);
+      }
     }
 
     init();
     draw();
     window.addEventListener('resize', init);
     document.addEventListener('visibilitychange', handleVisibility);
-    return () => {
+    return function cleanup() {
       running = false;
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', init);
@@ -70,5 +78,5 @@ export default function ParticleField({ density = 50, color = '244,196,48', clas
     };
   }, [density, color]);
 
-  return <canvas ref={canvasRef} className={absolute inset-0 w-full h-full pointer-events-none ${className}} />;
+  return <canvas ref={canvasRef} className={'absolute inset-0 w-full h-full pointer-events-none ' + className} />;
 }
