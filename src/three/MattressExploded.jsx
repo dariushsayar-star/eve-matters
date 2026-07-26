@@ -3,11 +3,6 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { mattressLayers } from '../data/layers.js';
 
-/**
- * Exploded-view mattress visualization. Each layer floats at its own
- * height, gently bobbing. Clicking / tapping a layer calls onLayerClick
- * with the layer id so the parent React page can show an info panel.
- */
 export default function MattressExploded({ onLayerClick, activeLayerId, className = '' }) {
   const mountRef = useRef(null);
   const meshesRef = useRef([]);
@@ -21,14 +16,15 @@ export default function MattressExploded({ onLayerClick, activeLayerId, classNam
     const mount = mountRef.current;
     const width = mount.clientWidth;
     const height = mount.clientHeight;
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
     camera.position.set(7, 3.5, 8);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setPixelRatio(pixelRatio);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -38,7 +34,7 @@ export default function MattressExploded({ onLayerClick, activeLayerId, classNam
     const key = new THREE.DirectionalLight(0xffe08a, 2.2);
     key.position.set(6, 10, 5);
     key.castShadow = true;
-    key.shadow.mapSize.set(2048, 2048);
+    key.shadow.mapSize.set(1024, 1024);
     scene.add(key);
     const fill = new THREE.PointLight(0x00d9ff, 0.5, 20);
     fill.position.set(-6, 2, -4);
@@ -49,7 +45,7 @@ export default function MattressExploded({ onLayerClick, activeLayerId, classNam
     const meshes = [];
 
     mattressLayers.forEach((layer) => {
-      const thicknessNum = parseFloat(layer.thickness) / 8; // scaled visual thickness
+      const thicknessNum = parseFloat(layer.thickness) / 8;
       const geo = new THREE.BoxGeometry(4.2, Math.max(thicknessNum, 0.14), 2.6, 2, 1, 2);
       const mat = new THREE.MeshPhysicalMaterial({
         color: new THREE.Color(layer.color),
@@ -106,10 +102,12 @@ export default function MattressExploded({ onLayerClick, activeLayerId, classNam
     renderer.domElement.addEventListener('pointermove', onPointerMove);
     renderer.domElement.addEventListener('click', onClick);
     renderer.domElement.addEventListener('touchend', onTouchEnd);
-
-    let raf;
+16:46
+let raf;
+    let running = true;
     const clock = new THREE.Clock();
     function animate() {
+      if (!running) return;
       const t = clock.getElapsedTime();
       meshes.forEach((m) => {
         m.position.y = m.userData.baseY + Math.sin(t * 0.8 + m.userData.phase) * 0.06;
@@ -125,6 +123,17 @@ export default function MattressExploded({ onLayerClick, activeLayerId, classNam
     }
     animate();
 
+    function handleVisibility() {
+      running = document.visibilityState === 'visible';
+      if (running) {
+        clock.start();
+        animate();
+      } else {
+        cancelAnimationFrame(raf);
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility);
+
     function handleResize() {
       const w = mount.clientWidth;
       const h = mount.clientHeight;
@@ -136,7 +145,9 @@ export default function MattressExploded({ onLayerClick, activeLayerId, classNam
     resizeObserver.observe(mount);
 
     return () => {
+      running = false;
       cancelAnimationFrame(raf);
+      document.removeEventListener('visibilitychange', handleVisibility);
       resizeObserver.disconnect();
       renderer.domElement.removeEventListener('pointermove', onPointerMove);
       renderer.domElement.removeEventListener('click', onClick);
@@ -148,5 +159,5 @@ export default function MattressExploded({ onLayerClick, activeLayerId, classNam
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onLayerClick]);
 
-  return <div ref={mountRef} className={`w-full h-full cursor-grab active:cursor-grabbing ${className}`} />;
+  return <div ref={mountRef} className={w-full h-full cursor-grab active:cursor-grabbing ${className}} />;
 }
