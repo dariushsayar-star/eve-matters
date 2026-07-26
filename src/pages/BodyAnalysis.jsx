@@ -158,7 +158,7 @@ initial={{ opacity: 0, scale: 0.6 }}
                 <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-l from-gold-dark via-gold to-gold-light"
-                    style={{ width: ${progress}% }}
+                    style={{ width: progress + '%' }}
                   />
                 </div>
               </motion.div>
