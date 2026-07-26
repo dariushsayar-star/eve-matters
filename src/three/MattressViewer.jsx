@@ -50,7 +50,7 @@ export default function MattressViewer({ className = '' }) {
       { h: 0.16, color: 0x3a3a3d, w: 4.2, d: 2.6 }
     ];
     let y = 0;
-    layerDefs.forEach((l) => {
+    layerDefs.forEach(function (l) {
       const geo = new THREE.BoxGeometry(l.w, l.h, l.d, 2, 1, 2);
       const mat = new THREE.MeshPhysicalMaterial({
         color: l.color,
@@ -101,8 +101,11 @@ export default function MattressViewer({ className = '' }) {
     let raf;
     let running = true;
     const clock = new THREE.Clock();
+
     function animate() {
-      if (!running) return;
+      if (!running) {
+        return;
+      }
       const t = clock.getElapsedTime();
       keyLight.intensity = 4 + Math.sin(t * 1.4) * 0.3;
       controls.update();
@@ -110,7 +113,6 @@ export default function MattressViewer({ className = '' }) {
       raf = requestAnimationFrame(animate);
     }
     animate();
-16:43
 function handleVisibility() {
       running = document.visibilityState === 'visible';
       if (running) {
@@ -132,7 +134,7 @@ function handleVisibility() {
     const resizeObserver = new ResizeObserver(handleResize);
     resizeObserver.observe(mount);
 
-    return () => {
+    return function cleanup() {
       running = false;
       cancelAnimationFrame(raf);
       document.removeEventListener('visibilitychange', handleVisibility);
@@ -143,5 +145,5 @@ function handleVisibility() {
     };
   }, []);
 
-  return <div ref={mountRef} className={w-full h-full ${className}} />;
+  return <div ref={mountRef} className={'w-full h-full ' + className} />;
 }
