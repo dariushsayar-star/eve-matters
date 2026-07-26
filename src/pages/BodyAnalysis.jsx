@@ -1,65 +1,4 @@
-import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiPlay, FiCheckCircle, FiRotateCw } from 'react-icons/fi';
-import SectionHeading from '../components/SectionHeading.jsx';
-import ScoreRing from '../components/ScoreRing.jsx';
-import { useSound } from '../hooks/useSound.js';
-
-const pressurePoints = [
-  { cx: 100, cy: 70, r: 14, delay: 0 },
-  { cx: 100, cy: 145, r: 20, delay: 0.2 },
-  { cx: 100, cy: 230, r: 16, delay: 0.4 },
-  { cx: 100, cy: 310, r: 18, delay: 0.6 },
-  { cx: 100, cy: 420, r: 12, delay: 0.8 }
-];
-
-const SCAN_DURATION_MS = 3200;
-
-export default function BodyAnalysis() {
-  const [phase, setPhase] = useState('idle');
-  const [progress, setProgress] = useState(0);
-  const { playClick, playChime } = useSound();
-
-  useEffect(() => {
-    if (phase !== 'scanning') return;
-    setProgress(0);
-    const start = performance.now();
-    let raf;
-    function tick(now) {
-      const pct = Math.min(100, ((now - start) / SCAN_DURATION_MS) * 100);
-      setProgress(pct);
-      if (pct < 100) {
-        raf = requestAnimationFrame(tick);
-      } else {
-        setPhase('done');
-        playChime();
-      }
-    }
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [phase, playChime]);
-
-  const startScan = () => {
-    playClick();
-    setPhase('scanning');
-  };
-
-  const reset = () => {
-    playClick();
-    setPhase('idle');
-    setProgress(0);
-  };
-
-  return (
-    <div className="px-6 md:px-12 pb-20 max-w-6xl mx-auto">
-      <SectionHeading
-        eyebrow="تحلیل بدن (نمایشی)"
-        title="نقشه فشار و راحتی بدن"
-        subtitle="این بخش صرفاً یک نمایش گرافیکی برای شوروم است و جایگزین ارزیابی پزشکی یا سنسور واقعی نیست."
-      />
-
-      <div className="grid lg:grid-cols-2 gap-10 items-center">
-        <div className="glass rounded-3xl p-8 flex flex-col items-center justify-center gap-6">
+<div className="glass rounded-3xl p-8 flex flex-col items-center justify-center gap-6">
           <div className="relative w-full max-w-xs h-[440px]">
             <svg viewBox="0 0 200 480" className="w-full h-full">
               <defs>
@@ -89,60 +28,68 @@ export default function BodyAnalysis() {
                 transition={{ duration: 1.2, ease: 'easeInOut' }}
               />
 
-              {phase === 'done' ? (
+              {(phase === 'scanning' || phase === 'done') ? (
                 <g>
-                  {pressurePoints.map((p, i) => (
-                    <motion.circle
-                      key={i}
-                      cx={p.cx}
-                      cy={p.cy}
-                      r={p.r}
-                      fill="url(#heat)"
-initial={{ opacity: 0, scale: 0.6 }}
-                      animate={{ opacity: [0.4, 0.9, 0.4], scale: [0.9, 1.1, 0.9] }}
-                      transition={{ duration: 3, repeat: Infinity, delay: p.delay }}
-                    />
-                  ))}
-                  <motion.path
-                    d="M100 40 C98 100 102 160 100 220 C98 280 102 340 100 420"
-                    fill="none"
-                    stroke="#22c55e"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    initial={{ pathLength: 0 }}
-                    animate={{ pathLength: 1 }}
-                    transition={{ duration: 1, ease: 'easeInOut' }}
-                    style={{ filter: 'drop-shadow(0 0 6px #22c55e)' }}
-                  />
+                  {pressurePoints.map(function (p) {
+                    var revealed = phase === 'done' || scanY >= p.cy;
+                    if (!revealed) {
+                      return null;
+                    }
+                    return (
+                      <motion.circle
+                        key={p.id}
+                        cx={p.cx}
+                        cy={p.cy}
+                        r={p.r}
+                        fill="url(#heat)"
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: [0.4, 0.9, 0.4], scale: [0.9, 1.1, 0.9] }}
+                        transition={{ duration: 2.4, repeat: Infinity }}
+                      />
+                    );
+                  })}
                 </g>
               ) : null}
 
-              {phase === 'scanning' ? (
-                <motion.rect
-                  x={40}
-                  width={120}
-                  height={26}
-                  fill="url(#scanLine)"
-                  initial={{ y: 10 }}
-                  animate={{ y: 440 }}
-                  transition={{ duration: SCAN_DURATION_MS / 1000, ease: 'linear' }}
+              {phase === 'done' ? (
+                <motion.path
+                  d="M100 40 C98 100 102 160 100 220 C98 280 102 340 100 420"
+                  fill="none"
+                  stroke="#22c55e"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ duration: 1, ease: 'easeInOut' }}
+                  style={{ filter: 'drop-shadow(0 0 6px #22c55e)' }}
                 />
+              ) : null}
+
+              {phase === 'scanning' ? (
+                <rect x={40} y={scanY - 13} width={120} height={26} fill="url(#scanLine)" />
               ) : null}
             </svg>
           </div>
 
           <AnimatePresence mode="wait">
-            {phase === 'idle' && (
-              <motion.button
-                key="start"
+            {phase === 'select' && (
+              <motion.div
+                key="select"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                onClick={startScan}
-                className="btn-gold flex items-center gap-2"
+                className="flex flex-col items-center gap-4 w-full"
               >
-                <FiPlay /> شروع اسکن مشتری
-              </motion.button>
+                <p className="text-sm text-ash">پروفایل مشتری را انتخاب کنید</p>
+                <div className="flex gap-4">
+<button onClick={function () { startScan('male'); }} className="btn-gold flex items-center gap-2">
+                    <FiUser /> شروع اسکن آقا
+                  </button>
+                  <button onClick={function () { startScan('female'); }} className="btn-ghost flex items-center gap-2">
+                    <FiUser /> شروع اسکن خانوم
+                  </button>
+                </div>
+              </motion.div>
             )}
             {phase === 'scanning' && (
               <motion.div
@@ -150,11 +97,10 @@ initial={{ opacity: 0, scale: 0.6 }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="w-full max-w-xs"
+                className="w-full max-w-xs text-center"
               >
-                <p className="text-center text-sm text-ash mb-2">
-                  در حال تحلیل نقاط فشار بدن... {Math.round(progress)}٪
-                </p>
+                <p className="text-sm text-gold font-medium mb-1">{getStageText(progress)}</p>
+                <p className="text-xs text-ash mb-2">{Math.round(progress)} درصد</p>
                 <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-l from-gold-dark via-gold to-gold-light"
@@ -182,25 +128,24 @@ initial={{ opacity: 0, scale: 0.6 }}
         </div>
 
         <div className="grid grid-cols-2 gap-6">
-          {[
-            { value: 94, label: 'امتیاز راحتی', color: '#F4C430' },
-            { value: 91, label: 'امتیاز خواب', color: '#00D9FF' },
-            { value: 88, label: 'جذب حرکت', color: '#F4C430' },
-            { value: 90, label: 'خنک‌کنندگی', color: '#00D9FF' }
-          ].map((s) => (
-            <div key={s.label} className="glass rounded-3xl p-6 flex justify-center min-h-[190px] items-center">
-              {phase === 'done' ? (
-                <ScoreRing value={s.value} label={s.label} color={s.color} />
-              ) : (
-                <span className="text-ash text-sm text-center px-4">
-                  پس از پایان اسکن نمایش داده می‌شود
-                </span>
-              )}
-            </div>
-          ))}
+          {[0, 1, 2, 3].map(function (i) {
+            var card = scoreCards[i];
+            return (
+              <div key={i} className="glass rounded-3xl p-6 flex justify-center min-h-[190px] items-center">
+                {phase === 'done' && card ? (
+                  <ScoreRing value={card.value} label={card.label} color={card.color} />
+                ) : (
+                  <span className="text-ash text-sm text-center px-4">
+                    پس از پایان اسکن نمایش داده می‌شود
+                  </span>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
-<p className="text-center text-ash/60 text-xs mt-10 max-w-xl mx-auto">
+
+      <p className="text-center text-ash/60 text-xs mt-10 max-w-xl mx-auto">
         این نمایش صرفاً جهت تجربه فروشگاهی و آموزشی طراحی شده و مبتنی بر داده‌های واقعی بدن مشتری نیست.
       </p>
     </div>
