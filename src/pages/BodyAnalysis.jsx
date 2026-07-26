@@ -89,8 +89,8 @@ export default function BodyAnalysis() {
                 transition={{ duration: 1.2, ease: 'easeInOut' }}
               />
 
-              {phase === 'done' && (
-                <>
+              {phase === 'done' ? (
+                <g>
                   {pressurePoints.map((p, i) => (
                     <motion.circle
                       key={i}
@@ -98,7 +98,6 @@ export default function BodyAnalysis() {
                       cy={p.cy}
                       r={p.r}
                       fill="url(#heat)"
-16:47
 initial={{ opacity: 0, scale: 0.6 }}
                       animate={{ opacity: [0.4, 0.9, 0.4], scale: [0.9, 1.1, 0.9] }}
                       transition={{ duration: 3, repeat: Infinity, delay: p.delay }}
@@ -115,10 +114,10 @@ initial={{ opacity: 0, scale: 0.6 }}
                     transition={{ duration: 1, ease: 'easeInOut' }}
                     style={{ filter: 'drop-shadow(0 0 6px #22c55e)' }}
                   />
-                </>
-              )}
+                </g>
+              ) : null}
 
-              {phase === 'scanning' && (
+              {phase === 'scanning' ? (
                 <motion.rect
                   x={40}
                   width={120}
@@ -128,7 +127,7 @@ initial={{ opacity: 0, scale: 0.6 }}
                   animate={{ y: 440 }}
                   transition={{ duration: SCAN_DURATION_MS / 1000, ease: 'linear' }}
                 />
-              )}
+              ) : null}
             </svg>
           </div>
 
@@ -201,7 +200,6 @@ initial={{ opacity: 0, scale: 0.6 }}
           ))}
         </div>
       </div>
-16:47
 <p className="text-center text-ash/60 text-xs mt-10 max-w-xl mx-auto">
         این نمایش صرفاً جهت تجربه فروشگاهی و آموزشی طراحی شده و مبتنی بر داده‌های واقعی بدن مشتری نیست.
       </p>
