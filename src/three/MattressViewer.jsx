@@ -2,11 +2,6 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
-/**
- * Interactive 3D mattress viewer: mouse/touch rotation, pinch/scroll zoom,
- * soft shadows and a reflective floor. Built with vanilla Three.js so it
- * stays framework-agnostic and lightweight.
- */
 export default function MattressViewer({ className = '' }) {
   const mountRef = useRef(null);
 
@@ -14,6 +9,7 @@ export default function MattressViewer({ className = '' }) {
     const mount = mountRef.current;
     const width = mount.clientWidth;
     const height = mount.clientHeight;
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
 
     const scene = new THREE.Scene();
     scene.background = null;
@@ -22,22 +18,21 @@ export default function MattressViewer({ className = '' }) {
     const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 100);
     camera.position.set(6, 4.5, 7);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setPixelRatio(pixelRatio);
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     mount.appendChild(renderer.domElement);
 
-    // Lighting: key gold light + soft blue fill + ambient
     const ambient = new THREE.AmbientLight(0xffffff, 0.35);
     scene.add(ambient);
 
     const keyLight = new THREE.SpotLight(0xffe08a, 4.2, 30, Math.PI / 5, 0.4, 1.2);
     keyLight.position.set(6, 9, 4);
     keyLight.castShadow = true;
-    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.mapSize.set(1024, 1024);
     keyLight.shadow.bias = -0.0004;
     scene.add(keyLight);
 
@@ -45,7 +40,6 @@ export default function MattressViewer({ className = '' }) {
     fillLight.position.set(-6, 3, -4);
     scene.add(fillLight);
 
-    // Mattress group (stacked box layers for a believable silhouette)
     const mattress = new THREE.Group();
     const layerDefs = [
       { h: 0.16, color: 0xf5f1e6, w: 4.2, d: 2.6 },
@@ -75,8 +69,7 @@ export default function MattressViewer({ className = '' }) {
     mattress.position.y = -y / 2;
     scene.add(mattress);
 
-    // Reflective-feeling floor
-    const floorGeo = new THREE.CircleGeometry(9, 64);
+    const floorGeo = new THREE.CircleGeometry(9, 48);
     const floorMat = new THREE.MeshStandardMaterial({
       color: 0x050505,
       roughness: 0.15,
@@ -88,8 +81,7 @@ export default function MattressViewer({ className = '' }) {
     floor.receiveShadow = true;
     scene.add(floor);
 
-    // Subtle gold ring accent on the floor
-    const ringGeo = new THREE.RingGeometry(3.6, 3.66, 80);
+    const ringGeo = new THREE.RingGeometry(3.6, 3.66, 64);
     const ringMat = new THREE.MeshBasicMaterial({ color: 0xf4c430, transparent: true, opacity: 0.35, side: THREE.DoubleSide });
     const ring = new THREE.Mesh(ringGeo, ringMat);
     ring.rotation.x = -Math.PI / 2;
@@ -103,12 +95,14 @@ export default function MattressViewer({ className = '' }) {
     controls.maxDistance = 14;
     controls.maxPolarAngle = Math.PI / 2.1;
     controls.autoRotate = true;
-    controls.autoRotateSpeed = 0.8;
+    controls.autoRotateSpeed = 0.6;
     controls.target.set(0, -0.2, 0);
 
     let raf;
+    let running = true;
     const clock = new THREE.Clock();
     function animate() {
+      if (!running) return;
       const t = clock.getElapsedTime();
       keyLight.intensity = 4 + Math.sin(t * 1.4) * 0.3;
       controls.update();
@@ -116,6 +110,17 @@ export default function MattressViewer({ className = '' }) {
       raf = requestAnimationFrame(animate);
     }
     animate();
+16:43
+function handleVisibility() {
+      running = document.visibilityState === 'visible';
+      if (running) {
+        clock.start();
+        animate();
+      } else {
+        cancelAnimationFrame(raf);
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility);
 
     function handleResize() {
       const w = mount.clientWidth;
@@ -128,7 +133,9 @@ export default function MattressViewer({ className = '' }) {
     resizeObserver.observe(mount);
 
     return () => {
+      running = false;
       cancelAnimationFrame(raf);
+      document.removeEventListener('visibilitychange', handleVisibility);
       resizeObserver.disconnect();
       controls.dispose();
       renderer.dispose();
@@ -136,5 +143,5 @@ export default function MattressViewer({ className = '' }) {
     };
   }, []);
 
-  return <div ref={mountRef} className={`w-full h-full ${className}`} />;
+  return <div ref={mountRef} className={w-full h-full ${className}} />;
 }
