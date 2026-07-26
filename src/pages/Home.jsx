@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiAward, FiCpu, FiLayers, FiUserCheck, FiBarChart2, FiShield, FiArrowLeft } from 'react-icons/fi';
+import { FiAward, FiCpu, FiLayers, FiUserCheck, FiActivity, FiBarChart2, FiShield, FiArrowLeft } from 'react-icons/fi';
 import GlassCard from '../components/GlassCard.jsx';
 import ParticleField from '../components/ParticleField.jsx';
 import MattressViewer from '../three/MattressViewer.jsx';
@@ -11,6 +11,7 @@ const cards = [
   { to: '/technology', icon: FiCpu, title: 'فناوری', desc: 'نوآوری در هر لایه از تشک' },
   { to: '/structure', icon: FiLayers, title: 'لایه‌های تشک', desc: 'کاوش سه‌بعدی ساختار تشک' },
   { to: '/recommendation', icon: FiUserCheck, title: 'پیشنهاد هوشمند', desc: 'بهترین تشک متناسب با شما' },
+  { to: '/body-analysis', icon: FiActivity, title: 'تحلیل بدن', desc: 'اسکن نمایشی فشار و راحتی بدن' },
   { to: '/compare', icon: FiBarChart2, title: 'مقایسه مدل‌ها', desc: 'SIMBA، HAPPY، ROYAL، PREMIUM' },
   { to: '/warranty', icon: FiShield, title: 'گارانتی', desc: 'پوشش کامل و راهنمای نگهداری' }
 ];
@@ -21,7 +22,6 @@ export default function Home() {
 
   return (
     <div className="relative w-full">
-      {/* Hero */}
       <section className="relative h-[70vh] min-h-[520px] flex items-center justify-center overflow-hidden px-6">
         <ParticleField density={45} className="opacity-60" />
         <div className="absolute inset-0 bg-gradient-to-b from-void via-transparent to-void pointer-events-none" />
@@ -70,33 +70,35 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Six interactive cards */}
       <section className="px-6 md:px-12 pb-16">
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-          {cards.map(({ to, icon: Icon, title, desc }, i) => (
-            <motion.div
-              key={to}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-60px' }}
-              transition={{ duration: 0.5, delay: i * 0.08 }}
-            >
-              <GlassCard
-                onClick={() => { playClick(); navigate(to); }}
-                onMouseEnter={playHover}
-                className="h-full flex flex-col gap-4"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-gold/10 border border-gold/30 flex items-center justify-center text-gold">
-                  <Icon size={22} />
-                </div>
-                <h3 className="text-xl font-bold">{title}</h3>
-                <p className="text-ash text-sm">{desc}</p>
-                <span className="mt-auto flex items-center gap-2 text-gold text-sm font-medium">
-                  مشاهده <FiArrowLeft size={14} />
-                </span>
-              </GlassCard>
-            </motion.div>
-          ))}
+          {cards.map(function (card, i) {
+            const Icon = card.icon;
+            return (
+              <motion.div
+                key={card.to}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-60px' }}
+                transition={{ duration: 0.5, delay: i * 0.08 }}
+>
+                <GlassCard
+                  onClick={() => { playClick(); navigate(card.to); }}
+                  onMouseEnter={playHover}
+                  className="h-full flex flex-col gap-4"
+                >
+                  <div className="w-12 h-12 rounded-2xl bg-gold/10 border border-gold/30 flex items-center justify-center text-gold">
+                    <Icon size={22} />
+                  </div>
+                  <h3 className="text-xl font-bold">{card.title}</h3>
+                  <p className="text-ash text-sm">{card.desc}</p>
+                  <span className="mt-auto flex items-center gap-2 text-gold text-sm font-medium">
+                    مشاهده <FiArrowLeft size={14} />
+                  </span>
+                </GlassCard>
+              </motion.div>
+            );
+          })}
         </div>
       </section>
     </div>
