@@ -3,7 +3,7 @@
   "productName": "EVE Matters Experience Center",
   "version": "1.0.0",
   "description": "Luxury interactive showroom software for EVE Matters premium mattresses",
-  "main": "electron/main.js",
+  "main": "electron/main.cjs",
   "author": "EVE Matters",
   "private": true,
   "type": "module",
