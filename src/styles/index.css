@@ -1,0 +1,80 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+  Offline font fallback: drop Vazirmatn variable .woff2 files into
+  src/assets/fonts/ (e.g. Vazirmatn[wght].woff2) and this block will
+  serve them locally instead of relying on the Google Fonts CDN link
+  in index.html — required for a kiosk machine with no internet.
+*/
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('/src/assets/fonts/Vazirmatn[wght].woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+  scrollbar-width: thin;
+  scrollbar-color: #F4C430 #0d0d0f;
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #0d0d0f; }
+::-webkit-scrollbar-thumb { background: #B8860B; border-radius: 999px; }
+
+body {
+  user-select: none; /* showroom kiosk: no accidental text selection on touch */
+}
+
+input, textarea {
+  user-select: text;
+}
+
+@layer components {
+  .glass {
+    @apply bg-white/[0.04] backdrop-blur-xl border border-white/10 shadow-glass;
+  }
+  .glass-gold {
+    @apply bg-white/[0.04] backdrop-blur-xl border border-gold/25 shadow-gold;
+  }
+  .btn-gold {
+    @apply px-8 py-3 rounded-full bg-gradient-to-l from-gold-dark via-gold to-gold-light text-void font-bold tracking-wide
+      shadow-gold hover:shadow-gold-lg hover:scale-[1.03] active:scale-95 transition-all duration-300;
+  }
+  .btn-ghost {
+    @apply px-8 py-3 rounded-full border border-white/20 text-ivory/90 hover:border-gold/60 hover:text-gold
+      transition-all duration-300 backdrop-blur-md;
+  }
+  .heading-xl {
+    @apply text-5xl md:text-7xl font-black tracking-tight leading-[1.05];
+  }
+  .heading-lg {
+    @apply text-3xl md:text-5xl font-extrabold tracking-tight;
+  }
+  .eyebrow {
+    @apply text-gold/90 tracking-[0.3em] text-xs md:text-sm font-semibold uppercase;
+  }
+  .gold-text {
+    background: linear-gradient(90deg, #B8860B, #F4C430 45%, #FFE08A 55%, #F4C430);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}

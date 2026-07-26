@@ -1,0 +1,33 @@
+import { NavLink } from 'react-router-dom';
+import { FiHome, FiCpu, FiLayers, FiUserCheck, FiBarChart2 } from 'react-icons/fi';
+import { useSound } from '../hooks/useSound.js';
+
+const links = [
+  { to: '/home', label: 'خانه', icon: FiHome },
+  { to: '/technology', label: 'فناوری', icon: FiCpu },
+  { to: '/structure', label: 'ساختار', icon: FiLayers },
+  { to: '/recommendation', label: 'پیشنهاد', icon: FiUserCheck },
+  { to: '/compare', label: 'مقایسه', icon: FiBarChart2 }
+];
+
+export default function BottomNav() {
+  const { playClick } = useSound();
+  return (
+    <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 glass border-x-0 border-b-0 flex justify-around py-2 px-2">
+      {links.map(({ to, label, icon: Icon }) => (
+        <NavLink
+          key={to}
+          to={to}
+          onClick={playClick}
+          className={({ isActive }) =>
+            `flex flex-col items-center gap-1 px-3 py-1.5 rounded-2xl text-[11px] transition-colors
+            ${isActive ? 'text-gold' : 'text-ash'}`
+          }
+        >
+          <Icon size={18} />
+          {label}
+        </NavLink>
+      ))}
+    </nav>
+  );
+}
