@@ -126,7 +126,7 @@
             )}
           </AnimatePresence>
         </div>
-
+</div>
         <div className="grid grid-cols-2 gap-6">
           {[0, 1, 2, 3].map(function (i) {
             var card = scoreCards[i];
