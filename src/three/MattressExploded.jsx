@@ -44,7 +44,7 @@ export default function MattressExploded({ onLayerClick, activeLayerId, classNam
     const pointer = new THREE.Vector2();
     const meshes = [];
 
-    mattressLayers.forEach((layer) => {
+    mattressLayers.forEach(function (layer) {
       const thicknessNum = parseFloat(layer.thickness) / 8;
       const geo = new THREE.BoxGeometry(4.2, Math.max(thicknessNum, 0.14), 2.6, 2, 1, 2);
       const mat = new THREE.MeshPhysicalMaterial({
@@ -92,8 +92,9 @@ export default function MattressExploded({ onLayerClick, activeLayerId, classNam
     function onClick(e) {
       handlePick(e.clientX, e.clientY);
     }
+
     function onTouchEnd(e) {
-      if (e.changedTouches?.length) {
+      if (e.changedTouches && e.changedTouches.length) {
         const t = e.changedTouches[0];
         handlePick(t.clientX, t.clientY);
       }
@@ -102,14 +103,16 @@ export default function MattressExploded({ onLayerClick, activeLayerId, classNam
     renderer.domElement.addEventListener('pointermove', onPointerMove);
     renderer.domElement.addEventListener('click', onClick);
     renderer.domElement.addEventListener('touchend', onTouchEnd);
-16:46
-let raf;
+
+    let raf;
     let running = true;
     const clock = new THREE.Clock();
-    function animate() {
-      if (!running) return;
+function animate() {
+      if (!running) {
+        return;
+      }
       const t = clock.getElapsedTime();
-      meshes.forEach((m) => {
+      meshes.forEach(function (m) {
         m.position.y = m.userData.baseY + Math.sin(t * 0.8 + m.userData.phase) * 0.06;
         const isActive = m.userData.id === activeLayerRef.current;
         const targetScale = isActive ? 1.04 : 1;
@@ -144,7 +147,7 @@ let raf;
     const resizeObserver = new ResizeObserver(handleResize);
     resizeObserver.observe(mount);
 
-    return () => {
+    return function cleanup() {
       running = false;
       cancelAnimationFrame(raf);
       document.removeEventListener('visibilitychange', handleVisibility);
@@ -156,8 +159,7 @@ let raf;
       renderer.dispose();
       mount.removeChild(renderer.domElement);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onLayerClick]);
 
-  return <div ref={mountRef} className={w-full h-full cursor-grab active:cursor-grabbing ${className}} />;
+  return <div ref={mountRef} className={'w-full h-full cursor-grab active:cursor-grabbing ' + className} />;
 }
