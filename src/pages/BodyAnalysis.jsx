@@ -1,3 +1,140 @@
+import { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiPlay, FiCheckCircle, FiRotateCw, FiUser } from 'react-icons/fi';
+import SectionHeading from '../components/SectionHeading.jsx';
+import ScoreRing from '../components/ScoreRing.jsx';
+import { useSound } from '../hooks/useSound.js';
+
+var pressurePoints = [
+  { id: 'head', cx: 100, cy: 70, r: 14 },
+  { id: 'shoulders', cx: 100, cy: 145, r: 20 },
+  { id: 'lowerBack', cx: 100, cy: 230, r: 16 },
+  { id: 'hips', cx: 100, cy: 310, r: 18 },
+  { id: 'legs', cx: 100, cy: 420, r: 12 }
+];
+
+var SCAN_DURATION_MS = 20000;
+var SVG_TOP = 10;
+var SVG_BOTTOM = 440;
+
+var STAGES = [
+  { until: 20, text: 'در حال شناسایی نقاط تماس بدن با تشک...' },
+  { until: 45, text: 'تحلیل توزیع فشار در نواحی مختلف...' },
+  { until: 70, text: 'بررسی راستای طبیعی ستون فقرات...' },
+  { until: 90, text: 'ارزیابی جذب حرکت و خنک‌کنندگی...' },
+  { until: 100, text: 'نهایی‌سازی نتایج تحلیل...' }
+];
+
+function randomBetween(min, max) {
+  return Math.round(min + Math.random() * (max - min));
+}
+
+function generateScores(profile) {
+  if (profile === 'female') {
+    return {
+      comfort: randomBetween(88, 98),
+      sleep: randomBetween(86, 96),
+      motion: randomBetween(85, 95),
+      cooling: randomBetween(82, 93)
+    };
+  }
+  return {
+    comfort: randomBetween(85, 96),
+    sleep: randomBetween(83, 94),
+    motion: randomBetween(82, 93),
+    cooling: randomBetween(85, 96)
+  };
+}
+
+function getStageText(pct) {
+  for (var i = 0; i < STAGES.length; i++) {
+    if (pct <= STAGES[i].until) {
+      return STAGES[i].text;
+    }
+  }
+  return STAGES[STAGES.length - 1].text;
+}
+
+export default function BodyAnalysis() {
+  var phaseState = useState('select');
+  var phase = phaseState[0];
+  var setPhase = phaseState[1];
+
+  var profileState = useState(null);
+  var profile = profileState[0];
+  var setProfile = profileState[1];
+
+  var progressState = useState(0);
+  var progress = progressState[0];
+  var setProgress = progressState[1];
+
+  var scoresState = useState(null);
+  var scores = scoresState[0];
+  var setScores = scoresState[1];
+
+  var sound = useSound();
+  var playClick = sound.playClick;
+  var playChime = sound.playChime;
+
+  useEffect(function () {
+    if (phase !== 'scanning') {
+      return undefined;
+    }
+    setProgress(0);
+    var start = performance.now();
+    var raf;
+
+    function tick(now) {
+      var pct = Math.min(100, ((now - start) / SCAN_DURATION_MS) * 100);
+      setProgress(pct);
+      if (pct < 100) {
+        raf = requestAnimationFrame(tick);
+      } else {
+        setScores(generateScores(profile));
+        setPhase('done');
+        playChime();
+      }
+    }
+    raf = requestAnimationFrame(tick);
+    return function cleanup() {
+      cancelAnimationFrame(raf);
+    };
+  }, [phase, profile, playChime]);
+
+  function startScan(selectedProfile) {
+    playClick();
+    setProfile(selectedProfile);
+    setPhase('scanning');
+  }
+
+  function reset() {
+    playClick();
+    setPhase('select');
+    setProfile(null);
+    setProgress(0);
+    setScores(null);
+  }
+
+  var scanY = SVG_TOP + ((SVG_BOTTOM - SVG_TOP) * progress) / 100;
+
+  var scoreCards = scores
+    ? [
+        { value: scores.comfort, label: 'امتیاز راحتی', color: '#F4C430' },
+        { value: scores.sleep, label: 'امتیاز خواب', color: '#00D9FF' },
+        { value: scores.motion, label: 'جذب حرکت', color: '#F4C430' },
+        { value: scores.cooling, label: 'خنک‌کنندگی', color: '#00D9FF' }
+      ]
+    : [];
+
+  return (
+    <div className="px-6 md:px-12 pb-20 max-w-6xl mx-auto">
+      <SectionHeading
+        eyebrow="تحلیل بدن (نمایشی)"
+        title="نقشه فشار و راحتی بدن"
+        subtitle="این بخش صرفاً یک نمایش گرافیکی برای شوروم است و جایگزین ارزیابی پزشکی یا سنسور واقعی نیست."
+      />
+
+      <div className="grid lg:grid-cols-2 gap-10 items-center">
 <div className="glass rounded-3xl p-8 flex flex-col items-center justify-center gap-6">
           <div className="relative w-full max-w-xs h-[440px]">
             <svg viewBox="0 0 200 480" className="w-full h-full">
@@ -126,7 +263,7 @@
             )}
           </AnimatePresence>
         </div>
-</div>
+
         <div className="grid grid-cols-2 gap-6">
           {[0, 1, 2, 3].map(function (i) {
             var card = scoreCards[i];
