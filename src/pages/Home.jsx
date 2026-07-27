@@ -12,7 +12,7 @@ const cards = [
   { to: '/structure', icon: FiLayers, title: 'لایه‌های تشک', desc: 'کاوش سه‌بعدی ساختار تشک' },
   { to: '/recommendation', icon: FiUserCheck, title: 'پیشنهاد هوشمند', desc: 'بهترین تشک متناسب با شما' },
   { to: '/body-analysis', icon: FiActivity, title: 'تحلیل بدن', desc: 'اسکن نمایشی فشار و راحتی بدن' },
-  { to: '/compare', icon: FiBarChart2, title: 'مقایسه مدل‌ها', desc: 'SIMBA، HAPPY، ROYAL، PREMIUM' },
+  { to: '/compare', icon: FiBarChart2, title: 'مقایسه مدل‌ها', desc: 'NO.1 تا NO.3، EMMA، SIMBA و HAPPY+' },
   { to: '/warranty', icon: FiShield, title: 'گارانتی', desc: 'پوشش کامل و راهنمای نگهداری' }
 ];
 
