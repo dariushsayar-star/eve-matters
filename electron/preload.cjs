@@ -1,4 +1,4 @@
-const { contextBridge } = require('electron');
+const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('eveMatters', {
   isElectron: true,
@@ -7,5 +7,8 @@ contextBridge.exposeInMainWorld('eveMatters', {
     node: process.versions.node,
     chrome: process.versions.chrome,
     electron: process.versions.electron
+  },
+  quit: function () {
+    ipcRenderer.send('app:quit');
   }
 });
