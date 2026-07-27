@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, globalShortcut, screen } = require('electron');
+const { app, BrowserWindow, Menu, globalShortcut, screen, ipcMain } = require('electron');
 const path = require('node:path');
 
 const isDev = process.env.NODE_ENV === 'development';
@@ -65,6 +65,12 @@ app.whenReady().then(() => {
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
+});
+
+// Lets the renderer (the React app's exit button) ask the main process to
+// quit gracefully, since a frameless kiosk window has no OS close button.
+ipcMain.on('app:quit', () => {
+  app.quit();
 });
 
 app.on('will-quit', () => {
