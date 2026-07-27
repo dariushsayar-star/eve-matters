@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiAward, FiCpu, FiLayers, FiUserCheck, FiActivity, FiBarChart2, FiShield, FiArrowLeft } from 'react-icons/fi';
+import { FiAward, FiCpu, FiLayers, FiUserCheck, FiActivity, FiBarChart2, FiShield, FiArrowLeft, FiPower } from 'react-icons/fi';
 import GlassCard from '../components/GlassCard.jsx';
 import ParticleField from '../components/ParticleField.jsx';
-import MattressViewer from '../three/MattressViewer.jsx';
 import { useSound } from '../hooks/useSound.js';
 
 var cards = [
@@ -82,6 +81,12 @@ var slides = [
 
 var SLIDE_DURATION_MS = 6000;
 
+function quitApp() {
+  if (typeof window !== 'undefined' && window.eveMatters && window.eveMatters.quit) {
+    window.eveMatters.quit();
+  }
+}
+
 export default function Home() {
   var navigate = useNavigate();
   var sound = useSound();
@@ -91,6 +96,10 @@ export default function Home() {
   var slideState = useState(0);
   var slideIndex = slideState[0];
   var setSlideIndex = slideState[1];
+
+  var exitState = useState(false);
+  var showExitConfirm = exitState[0];
+  var setShowExitConfirm = exitState[1];
 
   useEffect(function () {
     var timer = null;
@@ -127,15 +136,27 @@ export default function Home() {
   }, []);
 
   var slide = slides[slideIndex];
-return (
+
+  return (
     <div className="relative w-full">
-      <section className="relative h-[70vh] min-h-[520px] flex items-center justify-center overflow-hidden px-6">
-        <ParticleField density={45} className="opacity-60" />
+      <button
+        onClick={function () {
+          playClick();
+          setShowExitConfirm(true);
+        }}
+        className="fixed top-24 left-6 z-30 w-11 h-11 rounded-full border border-white/15 text-ash hover:text-gold hover:border-gold/50 flex items-center justify-center backdrop-blur-md bg-black/20 transition-colors"
+        aria-label="خروج از برنامه"
+      >
+        <FiPower size={18} />
+      </button>
+
+      <section className="relative min-h-[calc(100vh-6rem)] flex items-center justify-center overflow-hidden px-6">
+        <ParticleField density={55} className="opacity-70" />
 
         <AnimatePresence>
           <motion.div
             key={slide.accent + slideIndex}
-            className="absolute w-[560px] h-[560px] rounded-full pointer-events-none"
+            className="absolute w-[720px] h-[720px] rounded-full pointer-events-none"
             style={{ background: 'radial-gradient(circle, ' + slide.accent + '22 0%, ' + slide.accent + '00 70%)' }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -146,26 +167,26 @@ return (
 
         <div className="absolute inset-0 bg-gradient-to-b from-void via-transparent to-void pointer-events-none" />
 
-        <div className="relative w-full max-w-6xl grid md:grid-cols-2 gap-8 items-center">
+        <div className="relative w-full max-w-4xl">
           <AnimatePresence mode="wait">
             <motion.div
               key={slideIndex}
-              initial={{ opacity: 0, y: 24 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -24 }}
+              exit={{ opacity: 0, y: -30 }}
               transition={{ duration: 0.7, ease: 'easeOut' }}
-              className="text-center md:text-right order-2 md:order-1"
+              className="text-center"
             >
               <span className="eyebrow" style={{ color: slide.accent }}>
                 {slide.eyebrow}
               </span>
-              <h1 className="heading-xl mt-4">
+              <h1 className="heading-xl mt-6 text-6xl md:text-8xl">
                 {slide.title1}
                 <span className="gold-text">{slide.titleGold}</span>
                 {slide.title2}
               </h1>
-              <p className="text-ash mt-6 text-lg max-w-xl mx-auto md:mx-0">{slide.subtitle}</p>
-              <div className="flex gap-4 mt-8 justify-center md:justify-start">
+              <p className="text-ash mt-8 text-lg md:text-xl max-w-2xl mx-auto">{slide.subtitle}</p>
+              <div className="flex flex-wrap gap-4 mt-10 justify-center">
                 <button
                   onClick={function () {
                     playClick();
@@ -189,14 +210,14 @@ return (
                 </button>
               </div>
 
-              <div className="flex gap-2 mt-8 justify-center md:justify-start">
+              <div className="flex gap-2 mt-12 justify-center">
                 {slides.map(function (s, i) {
                   return (
                     <span
                       key={i}
                       className="h-1.5 rounded-full transition-all duration-500"
                       style={{
-                        width: i === slideIndex ? '28px' : '8px',
+                        width: i === slideIndex ? '32px' : '10px',
                         backgroundColor: i === slideIndex ? slide.accent : 'rgba(255,255,255,0.15)'
                       }}
                     />
@@ -205,15 +226,6 @@ return (
               </div>
             </motion.div>
           </AnimatePresence>
-
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, ease: 'easeOut', delay: 0.2 }}
-            className="order-1 md:order-2 h-[360px] md:h-[440px]"
-          >
-            <MattressViewer />
-          </motion.div>
         </div>
       </section>
 
@@ -223,7 +235,7 @@ return (
             var Icon = card.icon;
             return (
               <motion.div
-key={card.to}
+                key={card.to}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-60px' }}
@@ -251,6 +263,57 @@ key={card.to}
           })}
         </div>
       </section>
+
+      <AnimatePresence>
+        {showExitConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-6"
+            onClick={function () {
+              setShowExitConfirm(false);
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+              onClick={function (e) {
+                e.stopPropagation();
+              }}
+              className="glass-gold rounded-3xl p-8 max-w-sm w-full text-center"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-gold/10 border border-gold/30 flex items-center justify-center text-gold mx-auto mb-4">
+                <FiPower size={24} />
+              </div>
+              <h3 className="text-xl font-bold mb-2">خروج از برنامه</h3>
+              <p className="text-ash text-sm mb-6">آیا مطمئن هستید می‌خواهید از EVE Matters Experience Center خارج شوید؟</p>
+              <div className="flex gap-3 justify-center">
+                <button
+                  onClick={function () {
+                    playClick();
+                    quitApp();
+                  }}
+                  className="btn-gold"
+                >
+                  بله، خروج
+                </button>
+                <button
+                  onClick={function () {
+                    playClick();
+                    setShowExitConfirm(false);
+                  }}
+                  className="btn-ghost"
+                >
+                  انصراف
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
