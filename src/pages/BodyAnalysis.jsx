@@ -258,9 +258,9 @@ export default function BodyAnalysis() {
   return (
     <div className="px-6 md:px-12 pb-20 max-w-6xl mx-auto">
       <SectionHeading
-        eyebrow="تحلیل بدن (نمایشی)"
+        eyebrow="تحلیل بدن ()"
         title="نقشه فشار و راحتی بدن"
-        subtitle="این بخش یک نمایش شوروم است و جایگزین ارزیابی پزشکی یا سنسور واقعی نیست."
+        subtitle="این بخش جایگزین ارزیابی پزشکی نیست."
       />
 
       <div className="grid lg:grid-cols-2 gap-10 items-start">
