@@ -635,7 +635,6 @@ export default function BodyAnalysis() {
       </div>
 
       <p className="text-center text-ash/60 text-xs mt-10 max-w-xl mx-auto">
-        این نمایش صرفاً جهت تجربه فروشگاهی و آموزشی طراحی شده و مبتنی بر داده‌های واقعی بدن مشتری نیست.
       </p>
     </div>
   );
