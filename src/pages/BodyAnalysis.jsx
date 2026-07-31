@@ -50,6 +50,12 @@ var concernOptions = [
   { value: 'none', label: 'ندارم' }
 ];
 
+var spineLabels = [
+  { key: 'lordosis', label: 'حمایت از گودی کمر' },
+  { key: 'discPressure', label: 'کاهش فشار دیسک کمر' },
+  { key: 'alignment', label: 'راستای کلی ستون فقرات' }
+];
+
 function randomBetween(min, max) {
   return Math.round(min + Math.random() * (max - min));
 }
@@ -76,10 +82,18 @@ function generateScores(profile, position, concern) {
     };
   }
 
+  var spine = {
+    lordosis: randomBetween(78, 92),
+    discPressure: randomBetween(76, 90),
+    alignment: randomBetween(80, 94)
+  };
+
   var reasons = [];
 
   if (concern === 'back') {
     base.sleep += randomBetween(2, 6);
+    spine.alignment += randomBetween(2, 5);
+    spine.discPressure += randomBetween(1, 4);
     reasons.push('امتیاز حمایت از ستون فقرات با توجه به کمردرد شما تنظیم شد');
   } else if (concern === 'neck') {
     base.comfort += randomBetween(2, 5);
@@ -89,9 +103,11 @@ function generateScores(profile, position, concern) {
     reasons.push('جذب حرکت برای کاهش فشار روی شانه تنظیم شد');
   } else if (concern === 'lordosis') {
     base.sleep += randomBetween(2, 6);
+    spine.lordosis += randomBetween(4, 9);
     reasons.push('حمایت از انحنای طبیعی کمر (گودی کمر) در تحلیل لحاظ شد');
   } else if (concern === 'discPressure') {
     base.sleep += randomBetween(3, 7);
+    spine.discPressure += randomBetween(4, 9);
     reasons.push('کاهش فشار روی دیسک کمر در محاسبه امتیاز حمایت لحاظ شد');
   }
 
@@ -100,9 +116,11 @@ function generateScores(profile, position, concern) {
     reasons.push('نتایج متناسب با خواب به پهلو محاسبه شد');
   } else if (position === 'back') {
     base.sleep += randomBetween(1, 4);
+    spine.alignment += randomBetween(2, 5);
     reasons.push('نتایج متناسب با خواب به پشت محاسبه شد');
   } else if (position === 'stomach') {
     base.sleep += randomBetween(1, 3);
+    spine.alignment -= randomBetween(2, 5);
     reasons.push('نتایج متناسب با خواب به شکم محاسبه شد');
   }
 
@@ -112,6 +130,11 @@ function generateScores(profile, position, concern) {
       sleep: clampScore(base.sleep),
       motion: clampScore(base.motion),
       cooling: clampScore(base.cooling)
+    },
+    spine: {
+      lordosis: clampScore(spine.lordosis),
+      discPressure: clampScore(spine.discPressure),
+      alignment: clampScore(spine.alignment)
     },
     reasons: reasons
   };
@@ -266,7 +289,7 @@ export default function BodyAnalysis() {
   return (
     <div className="px-6 md:px-12 pb-20 max-w-6xl mx-auto">
       <SectionHeading
-        eyebrow="تحلیل بدن (نمایشی)"
+        eyebrow="تحلیل بدن (تشک اوه)"
         title="نقشه فشار و راحتی بدن"
         subtitle="این بخش جایگزین ارزیابی پزشکی نیست."
       />
@@ -634,6 +657,29 @@ export default function BodyAnalysis() {
                 })}
               </div>
 
+              <div className="border-t border-dashed border-white/15 my-4" />
+
+              <p className="text-xs text-ash mb-3">سلامت ستون فقرات</p>
+              <div className="flex flex-col gap-3 mb-5">
+                {spineLabels.map(function (item) {
+                  var val = result.spine[item.key];
+                  return (
+                    <div key={item.key}>
+                      <div className="flex justify-between text-xs text-ash mb-1">
+                        <span>{item.label}</span>
+                        <span>{val}%</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-l from-gold-dark via-gold to-gold-light"
+                          style={{ width: val + '%' }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
               <button onClick={printReport} className="btn-ghost w-full flex items-center justify-center gap-2 text-sm">
                 <FiPrinter /> چاپ گزارش
               </button>
@@ -643,6 +689,7 @@ export default function BodyAnalysis() {
       </div>
 
       <p className="text-center text-ash/60 text-xs mt-10 max-w-xl mx-auto">
+        
       </p>
     </div>
   );
