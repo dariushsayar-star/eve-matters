@@ -45,6 +45,8 @@ var concernOptions = [
   { value: 'back', label: 'کمردرد' },
   { value: 'neck', label: 'گردن‌درد' },
   { value: 'shoulder', label: 'شانه‌درد' },
+  { value: 'lordosis', label: 'گودی کمر' },
+  { value: 'discPressure', label: 'فشار روی دیسک کمر' },
   { value: 'none', label: 'ندارم' }
 ];
 
@@ -85,6 +87,12 @@ function generateScores(profile, position, concern) {
   } else if (concern === 'shoulder') {
     base.motion += randomBetween(2, 5);
     reasons.push('جذب حرکت برای کاهش فشار روی شانه تنظیم شد');
+  } else if (concern === 'lordosis') {
+    base.sleep += randomBetween(2, 6);
+    reasons.push('حمایت از انحنای طبیعی کمر (گودی کمر) در تحلیل لحاظ شد');
+  } else if (concern === 'discPressure') {
+    base.sleep += randomBetween(3, 7);
+    reasons.push('کاهش فشار روی دیسک کمر در محاسبه امتیاز حمایت لحاظ شد');
   }
 
   if (position === 'side') {
@@ -258,7 +266,7 @@ export default function BodyAnalysis() {
   return (
     <div className="px-6 md:px-12 pb-20 max-w-6xl mx-auto">
       <SectionHeading
-        eyebrow="تحلیل بدن ()"
+        eyebrow="تحلیل بدن (نمایشی)"
         title="نقشه فشار و راحتی بدن"
         subtitle="این بخش جایگزین ارزیابی پزشکی نیست."
       />
