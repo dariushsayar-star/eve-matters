@@ -50,12 +50,6 @@ var concernOptions = [
   { value: 'none', label: 'ندارم' }
 ];
 
-var spineLabels = [
-  { key: 'lordosis', label: 'حمایت از گودی کمر' },
-  { key: 'discPressure', label: 'کاهش فشار دیسک کمر' },
-  { key: 'alignment', label: 'راستای کلی ستون فقرات' }
-];
-
 function randomBetween(min, max) {
   return Math.round(min + Math.random() * (max - min));
 }
@@ -85,7 +79,8 @@ function generateScores(profile, position, concern) {
   var spine = {
     lordosis: randomBetween(78, 92),
     discPressure: randomBetween(76, 90),
-    alignment: randomBetween(80, 94)
+    alignment: randomBetween(80, 94),
+    pelvis: randomBetween(78, 92)
   };
 
   var reasons = [];
@@ -94,6 +89,7 @@ function generateScores(profile, position, concern) {
     base.sleep += randomBetween(2, 6);
     spine.alignment += randomBetween(2, 5);
     spine.discPressure += randomBetween(1, 4);
+    spine.pelvis += randomBetween(1, 4);
     reasons.push('امتیاز حمایت از ستون فقرات با توجه به کمردرد شما تنظیم شد');
   } else if (concern === 'neck') {
     base.comfort += randomBetween(2, 5);
@@ -108,11 +104,13 @@ function generateScores(profile, position, concern) {
   } else if (concern === 'discPressure') {
     base.sleep += randomBetween(3, 7);
     spine.discPressure += randomBetween(4, 9);
+    spine.pelvis += randomBetween(1, 4);
     reasons.push('کاهش فشار روی دیسک کمر در محاسبه امتیاز حمایت لحاظ شد');
   }
 
   if (position === 'side') {
     base.comfort += randomBetween(1, 4);
+    spine.pelvis += randomBetween(2, 5);
     reasons.push('نتایج متناسب با خواب به پهلو محاسبه شد');
   } else if (position === 'back') {
     base.sleep += randomBetween(1, 4);
@@ -121,6 +119,7 @@ function generateScores(profile, position, concern) {
   } else if (position === 'stomach') {
     base.sleep += randomBetween(1, 3);
     spine.alignment -= randomBetween(2, 5);
+    spine.pelvis -= randomBetween(1, 4);
     reasons.push('نتایج متناسب با خواب به شکم محاسبه شد');
   }
 
@@ -134,7 +133,8 @@ function generateScores(profile, position, concern) {
     spine: {
       lordosis: clampScore(spine.lordosis),
       discPressure: clampScore(spine.discPressure),
-      alignment: clampScore(spine.alignment)
+      alignment: clampScore(spine.alignment),
+      pelvis: clampScore(spine.pelvis)
     },
     reasons: reasons
   };
@@ -276,7 +276,11 @@ export default function BodyAnalysis() {
         { value: result.scores.comfort, label: 'امتیاز راحتی', color: '#F4C430' },
         { value: result.scores.sleep, label: 'امتیاز خواب', color: '#00D9FF' },
         { value: result.scores.motion, label: 'جذب حرکت', color: '#F4C430' },
-        { value: result.scores.cooling, label: 'خنک‌کنندگی', color: '#00D9FF' }
+        { value: result.scores.cooling, label: 'خنک‌کنندگی', color: '#00D9FF' },
+        { value: result.spine.lordosis, label: 'گودی کمر', color: '#F4C430' },
+        { value: result.spine.discPressure, label: 'فشار دیسک کمر', color: '#00D9FF' },
+        { value: result.spine.pelvis, label: 'توزیع فشار لگن', color: '#F4C430' },
+        { value: result.spine.alignment, label: 'راستای ستون فقرات', color: '#00D9FF' }
       ]
     : [];
 
@@ -599,15 +603,15 @@ export default function BodyAnalysis() {
           ) : null}
 
           {phase !== 'setup' ? (
-            <div className="grid grid-cols-2 gap-6">
-              {[0, 1, 2, 3].map(function (i) {
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[0, 1, 2, 3, 4, 5, 6, 7].map(function (i) {
                 var card = scoreCards[i];
                 return (
-                  <div key={i} className="glass rounded-3xl p-6 flex justify-center min-h-[190px] items-center">
+                  <div key={i} className="glass rounded-3xl p-4 flex justify-center min-h-[170px] items-center">
                     {phase === 'done' && card ? (
-                      <ScoreRing value={card.value} label={card.label} color={card.color} />
+                      <ScoreRing value={card.value} label={card.label} color={card.color} size={104} />
                     ) : (
-                      <span className="text-ash text-sm text-center px-4">
+                      <span className="text-ash text-xs text-center px-2">
                         پس از پایان اسکن نمایش داده می‌شود
                       </span>
                     )}
@@ -657,29 +661,6 @@ export default function BodyAnalysis() {
                 })}
               </div>
 
-              <div className="border-t border-dashed border-white/15 my-4" />
-
-              <p className="text-xs text-ash mb-3">سلامت ستون فقرات</p>
-              <div className="flex flex-col gap-3 mb-5">
-                {spineLabels.map(function (item) {
-                  var val = result.spine[item.key];
-                  return (
-                    <div key={item.key}>
-                      <div className="flex justify-between text-xs text-ash mb-1">
-                        <span>{item.label}</span>
-                        <span>{val}%</span>
-                      </div>
-                      <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-l from-gold-dark via-gold to-gold-light"
-                          style={{ width: val + '%' }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
               <button onClick={printReport} className="btn-ghost w-full flex items-center justify-center gap-2 text-sm">
                 <FiPrinter /> چاپ گزارش
               </button>
@@ -689,7 +670,7 @@ export default function BodyAnalysis() {
       </div>
 
       <p className="text-center text-ash/60 text-xs mt-10 max-w-xl mx-auto">
-        
+         .
       </p>
     </div>
   );
