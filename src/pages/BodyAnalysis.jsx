@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiCheckCircle, FiRotateCw, FiUser, FiPrinter } from 'react-icons/fi';
+import { FiCheckCircle, FiRotateCw, FiUser, FiPrinter, FiShoppingBag } from 'react-icons/fi';
 import SectionHeading from '../components/SectionHeading.jsx';
 import ScoreRing from '../components/ScoreRing.jsx';
 import { useSound } from '../hooks/useSound.js';
+import { recommendMattress } from '../utils/recommendation.js';
 
 var pressurePoints = [
   { id: 'feet', cx: 30, cy: 100, r: 12 },
@@ -173,7 +175,22 @@ function statusLabelFor(score) {
   return 'متعادل';
 }
 
+function recommendMattressFromAnalysis(position, concern) {
+  var answers = {
+    weight: 'medium',
+    position: position,
+    backPain: concern === 'back' || concern === 'lordosis' || concern === 'discPressure',
+    neckPain: concern === 'neck',
+    shoulderPain: concern === 'shoulder',
+    budget: 2
+  };
+  var ranked = recommendMattress(answers);
+  return ranked[0];
+}
+
 export default function BodyAnalysis() {
+  var navigate = useNavigate();
+
   var phaseState = useState('setup');
   var phase = phaseState[0];
   var setPhase = phaseState[1];
@@ -197,6 +214,10 @@ export default function BodyAnalysis() {
   var resultState = useState(null);
   var result = resultState[0];
   var setResult = resultState[1];
+
+  var mattressMatchState = useState(null);
+  var mattressMatch = mattressMatchState[0];
+  var setMattressMatch = mattressMatchState[1];
 
   var reportDateState = useState('');
   var reportDate = reportDateState[0];
@@ -222,6 +243,7 @@ export default function BodyAnalysis() {
         raf = requestAnimationFrame(tick);
       } else {
         setResult(generateScores(gender, position, concern));
+        setMattressMatch(recommendMattressFromAnalysis(position, concern));
         setReportDate(formatDate());
         setPhase('done');
         playChime();
@@ -261,6 +283,7 @@ export default function BodyAnalysis() {
     setConcern(null);
     setProgress(0);
     setResult(null);
+    setMattressMatch(null);
   }
 
   function printReport() {
@@ -293,7 +316,7 @@ export default function BodyAnalysis() {
   return (
     <div className="px-6 md:px-12 pb-20 max-w-6xl mx-auto">
       <SectionHeading
-        eyebrow="تحلیل بدن (تشک اوه)"
+        eyebrow="تحلیل بدن (نمایشی)"
         title="نقشه فشار و راحتی بدن"
         subtitle="این بخش جایگزین ارزیابی پزشکی نیست."
       />
@@ -661,16 +684,51 @@ export default function BodyAnalysis() {
                 })}
               </div>
 
-              <button onClick={printReport} className="btn-ghost w-full flex items-center justify-center gap-2 text-sm">
-                <FiPrinter /> چاپ گزارش
-              </button>
+              {mattressMatch ? (
+                <div className="mb-5">
+                  <div className="border-t border-dashed border-white/15 my-4" />
+                  <p className="eyebrow mb-2">تشک پیشنهادی برای شما</p>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-2xl font-black gold-text">{mattressMatch.name}</span>
+                    <span className="text-sm text-gold font-semibold">{mattressMatch.score}% تطابق</span>
+                  </div>
+                  <p className="text-ash text-sm mb-3">{mattressMatch.tagline}</p>
+                  <div className="flex flex-col gap-2">
+                    {mattressMatch.reasons.map(function (r, i) {
+                      return (
+                        <div key={i} className="flex items-center gap-2 text-sm text-ivory/85">
+                          <FiCheckCircle className="text-gold shrink-0" size={14} />
+                          {r}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="flex flex-col gap-2">
+                {mattressMatch ? (
+                  <button
+                    onClick={function () {
+                      playClick();
+                      navigate('/compare');
+                    }}
+                    className="btn-gold w-full flex items-center justify-center gap-2 text-sm"
+                  >
+                    <FiShoppingBag /> مشاهده در مقایسه مدل‌ها
+                  </button>
+                ) : null}
+                <button onClick={printReport} className="btn-ghost w-full flex items-center justify-center gap-2 text-sm">
+                  <FiPrinter /> چاپ گزارش
+                </button>
+              </div>
             </motion.div>
           ) : null}
         </div>
       </div>
 
       <p className="text-center text-ash/60 text-xs mt-10 max-w-xl mx-auto">
-         .
+      
       </p>
     </div>
   );
