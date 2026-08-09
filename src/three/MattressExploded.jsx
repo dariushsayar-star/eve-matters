@@ -16,13 +16,13 @@ export default function MattressExploded({ onLayerClick, activeLayerId, classNam
     const mount = mountRef.current;
     const width = mount.clientWidth;
     const height = mount.clientHeight;
-    const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
     camera.position.set(7, 3.5, 8);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(pixelRatio);
     renderer.shadowMap.enabled = true;
@@ -34,7 +34,7 @@ export default function MattressExploded({ onLayerClick, activeLayerId, classNam
     const key = new THREE.DirectionalLight(0xffe08a, 2.2);
     key.position.set(6, 10, 5);
     key.castShadow = true;
-    key.shadow.mapSize.set(1024, 1024);
+    key.shadow.mapSize.set(2048, 2048);
     scene.add(key);
     const fill = new THREE.PointLight(0x00d9ff, 0.5, 20);
     fill.position.set(-6, 2, -4);
@@ -44,7 +44,7 @@ export default function MattressExploded({ onLayerClick, activeLayerId, classNam
     const pointer = new THREE.Vector2();
     const meshes = [];
 
-    mattressLayers.forEach(function (layer) {
+    mattressLayers.forEach((layer) => {
       const thicknessNum = parseFloat(layer.thickness) / 8;
       const geo = new THREE.BoxGeometry(4.2, Math.max(thicknessNum, 0.14), 2.6, 2, 1, 2);
       const mat = new THREE.MeshPhysicalMaterial({
@@ -92,9 +92,8 @@ export default function MattressExploded({ onLayerClick, activeLayerId, classNam
     function onClick(e) {
       handlePick(e.clientX, e.clientY);
     }
-
     function onTouchEnd(e) {
-      if (e.changedTouches && e.changedTouches.length) {
+      if (e.changedTouches?.length) {
         const t = e.changedTouches[0];
         handlePick(t.clientX, t.clientY);
       }
@@ -107,12 +106,10 @@ export default function MattressExploded({ onLayerClick, activeLayerId, classNam
     let raf;
     let running = true;
     const clock = new THREE.Clock();
-function animate() {
-      if (!running) {
-        return;
-      }
+    function animate() {
+      if (!running) return;
       const t = clock.getElapsedTime();
-      meshes.forEach(function (m) {
+      meshes.forEach((m) => {
         m.position.y = m.userData.baseY + Math.sin(t * 0.8 + m.userData.phase) * 0.06;
         const isActive = m.userData.id === activeLayerRef.current;
         const targetScale = isActive ? 1.04 : 1;
@@ -147,7 +144,7 @@ function animate() {
     const resizeObserver = new ResizeObserver(handleResize);
     resizeObserver.observe(mount);
 
-    return function cleanup() {
+    return () => {
       running = false;
       cancelAnimationFrame(raf);
       document.removeEventListener('visibilitychange', handleVisibility);
@@ -159,6 +156,7 @@ function animate() {
       renderer.dispose();
       mount.removeChild(renderer.domElement);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onLayerClick]);
 
   return <div ref={mountRef} className={'w-full h-full cursor-grab active:cursor-grabbing ' + className} />;
