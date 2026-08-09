@@ -9,7 +9,7 @@ export default function MattressViewer({ className = '' }) {
     const mount = mountRef.current;
     const width = mount.clientWidth;
     const height = mount.clientHeight;
-    const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
 
     const scene = new THREE.Scene();
     scene.background = null;
@@ -18,7 +18,7 @@ export default function MattressViewer({ className = '' }) {
     const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 100);
     camera.position.set(6, 4.5, 7);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'low-power' });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(width, height);
     renderer.setPixelRatio(pixelRatio);
     renderer.shadowMap.enabled = true;
@@ -32,7 +32,7 @@ export default function MattressViewer({ className = '' }) {
     const keyLight = new THREE.SpotLight(0xffe08a, 4.2, 30, Math.PI / 5, 0.4, 1.2);
     keyLight.position.set(6, 9, 4);
     keyLight.castShadow = true;
-    keyLight.shadow.mapSize.set(1024, 1024);
+    keyLight.shadow.mapSize.set(2048, 2048);
     keyLight.shadow.bias = -0.0004;
     scene.add(keyLight);
 
@@ -50,7 +50,7 @@ export default function MattressViewer({ className = '' }) {
       { h: 0.16, color: 0x3a3a3d, w: 4.2, d: 2.6 }
     ];
     let y = 0;
-    layerDefs.forEach(function (l) {
+    layerDefs.forEach((l) => {
       const geo = new THREE.BoxGeometry(l.w, l.h, l.d, 2, 1, 2);
       const mat = new THREE.MeshPhysicalMaterial({
         color: l.color,
@@ -69,7 +69,7 @@ export default function MattressViewer({ className = '' }) {
     mattress.position.y = -y / 2;
     scene.add(mattress);
 
-    const floorGeo = new THREE.CircleGeometry(9, 48);
+    const floorGeo = new THREE.CircleGeometry(9, 64);
     const floorMat = new THREE.MeshStandardMaterial({
       color: 0x050505,
       roughness: 0.15,
@@ -81,7 +81,7 @@ export default function MattressViewer({ className = '' }) {
     floor.receiveShadow = true;
     scene.add(floor);
 
-    const ringGeo = new THREE.RingGeometry(3.6, 3.66, 64);
+    const ringGeo = new THREE.RingGeometry(3.6, 3.66, 80);
     const ringMat = new THREE.MeshBasicMaterial({ color: 0xf4c430, transparent: true, opacity: 0.35, side: THREE.DoubleSide });
     const ring = new THREE.Mesh(ringGeo, ringMat);
     ring.rotation.x = -Math.PI / 2;
@@ -95,17 +95,14 @@ export default function MattressViewer({ className = '' }) {
     controls.maxDistance = 14;
     controls.maxPolarAngle = Math.PI / 2.1;
     controls.autoRotate = true;
-    controls.autoRotateSpeed = 0.6;
+    controls.autoRotateSpeed = 0.8;
     controls.target.set(0, -0.2, 0);
 
     let raf;
     let running = true;
     const clock = new THREE.Clock();
-
     function animate() {
-      if (!running) {
-        return;
-      }
+      if (!running) return;
       const t = clock.getElapsedTime();
       keyLight.intensity = 4 + Math.sin(t * 1.4) * 0.3;
       controls.update();
@@ -113,7 +110,8 @@ export default function MattressViewer({ className = '' }) {
       raf = requestAnimationFrame(animate);
     }
     animate();
-function handleVisibility() {
+
+    function handleVisibility() {
       running = document.visibilityState === 'visible';
       if (running) {
         clock.start();
@@ -134,7 +132,7 @@ function handleVisibility() {
     const resizeObserver = new ResizeObserver(handleResize);
     resizeObserver.observe(mount);
 
-    return function cleanup() {
+    return () => {
       running = false;
       cancelAnimationFrame(raf);
       document.removeEventListener('visibilitychange', handleVisibility);
