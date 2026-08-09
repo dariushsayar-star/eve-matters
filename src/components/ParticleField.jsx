@@ -1,12 +1,12 @@
 import { useEffect, useRef } from 'react';
 
-export default function ParticleField({ density = 50, color = '244,196,48', className = '' }) {
+export default function ParticleField({ density = 80, color = '244,196,48', className = '' }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
-    const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.5);
+    const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
     let raf;
     let width, height;
     let particles = [];
@@ -19,26 +19,21 @@ export default function ParticleField({ density = 50, color = '244,196,48', clas
 
     function init() {
       resize();
-      particles = Array.from({ length: density }, function () {
-        return {
-          x: Math.random() * width,
-          y: Math.random() * height,
-          r: Math.random() * 2.2 * pixelRatio + 0.4,
-          vy: (Math.random() * 0.35 + 0.08) * pixelRatio,
-          vx: (Math.random() - 0.5) * 0.15 * pixelRatio,
-          alpha: Math.random() * 0.6 + 0.15,
-          pulse: Math.random() * Math.PI * 2
-        };
-      });
+      particles = Array.from({ length: density }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        r: Math.random() * 2.2 * pixelRatio + 0.4,
+        vy: (Math.random() * 0.35 + 0.08) * pixelRatio,
+        vx: (Math.random() - 0.5) * 0.15 * pixelRatio,
+        alpha: Math.random() * 0.6 + 0.15,
+        pulse: Math.random() * Math.PI * 2
+      }));
     }
 
     function draw() {
-      if (!running) {
-        return;
-      }
+      if (!running) return;
       ctx.clearRect(0, 0, width, height);
-      for (let i = 0; i < particles.length; i++) {
-        const p = particles[i];
+      for (const p of particles) {
         p.y -= p.vy;
         p.x += p.vx;
         p.pulse += 0.02;
@@ -49,7 +44,7 @@ export default function ParticleField({ density = 50, color = '244,196,48', clas
         const a = p.alpha * (0.6 + 0.4 * Math.sin(p.pulse));
         ctx.beginPath();
         ctx.fillStyle = 'rgba(' + color + ',' + a + ')';
-        ctx.shadowBlur = 6 * pixelRatio;
+        ctx.shadowBlur = 10 * pixelRatio;
         ctx.shadowColor = 'rgba(' + color + ',0.8)';
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         ctx.fill();
@@ -59,18 +54,15 @@ export default function ParticleField({ density = 50, color = '244,196,48', clas
 
     function handleVisibility() {
       running = document.visibilityState === 'visible';
-      if (running) {
-        draw();
-      } else {
-        cancelAnimationFrame(raf);
-      }
+      if (running) draw();
+      else cancelAnimationFrame(raf);
     }
 
     init();
     draw();
     window.addEventListener('resize', init);
     document.addEventListener('visibilitychange', handleVisibility);
-    return function cleanup() {
+    return () => {
       running = false;
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', init);
