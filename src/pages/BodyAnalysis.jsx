@@ -4,29 +4,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FiCheckCircle, FiRotateCw, FiUser, FiPrinter, FiShoppingBag } from 'react-icons/fi';
 import SectionHeading from '../components/SectionHeading.jsx';
 import ScoreRing from '../components/ScoreRing.jsx';
+import BodyScan3D from '../three/BodyScan3D.jsx';
 import { useSound } from '../hooks/useSound.js';
 import { recommendMattress } from '../utils/recommendation.js';
 
-var pressurePoints = [
-  { id: 'feet', cx: 30, cy: 100, r: 12 },
-  { id: 'kneeL', cx: 88, cy: 88, r: 9 },
-  { id: 'kneeR', cx: 88, cy: 112, r: 9 },
-  { id: 'hipL', cx: 180, cy: 80, r: 14 },
-  { id: 'hipR', cx: 180, cy: 120, r: 14 },
-  { id: 'lowerBack', cx: 250, cy: 100, r: 18 },
-  { id: 'upperBack', cx: 320, cy: 100, r: 16 },
-  { id: 'shoulderL', cx: 362, cy: 72, r: 13 },
-  { id: 'shoulderR', cx: 362, cy: 128, r: 13 },
-  { id: 'neck', cx: 390, cy: 100, r: 9 },
-  { id: 'head', cx: 425, cy: 100, r: 15 }
-];
-
-var spineTicks = [100, 124, 148, 172, 196, 220, 244, 268, 292, 316];
-var ribRows = [112, 130, 148, 166, 184];
-
 var SCAN_DURATION_MS = 20000;
-var SCAN_LEFT = 10;
-var SCAN_RIGHT = 470;
 var DEVICE_ACCENT = '#00D9FF';
 
 var STAGES = [
@@ -62,6 +44,8 @@ function clampScore(v) {
 
 function generateScores(profile, position, concern) {
   var base;
+  var reasons = [];
+
   if (profile === 'female') {
     base = {
       comfort: randomBetween(88, 96),
@@ -81,11 +65,15 @@ function generateScores(profile, position, concern) {
   var spine = {
     lordosis: randomBetween(78, 92),
     discPressure: randomBetween(76, 90),
-    alignment: randomBetween(80, 94),
-    pelvis: randomBetween(78, 92)
+    alignment: profile === 'male' ? randomBetween(83, 96) : randomBetween(80, 94),
+    pelvis: profile === 'female' ? randomBetween(82, 95) : randomBetween(78, 90)
   };
 
-  var reasons = [];
+  if (profile === 'female') {
+    reasons.push('توزیع فشار با توجه به آناتومی لگن در پروفایل خانم تنظیم شد');
+  } else {
+    reasons.push('حمایت از راستای شانه و ستون فقرات با توجه به پروفایل آقا تنظیم شد');
+  }
 
   if (concern === 'back') {
     base.sleep += randomBetween(2, 6);
@@ -291,7 +279,6 @@ export default function BodyAnalysis() {
     window.print();
   }
 
-  var scanX = SCAN_LEFT + ((SCAN_RIGHT - SCAN_LEFT) * progress) / 100;
   var canStart = Boolean(gender && position && concern);
 
   var scoreCards = result
@@ -316,29 +303,20 @@ export default function BodyAnalysis() {
   return (
     <div className="px-6 md:px-12 pb-20 max-w-6xl mx-auto">
       <SectionHeading
-        eyebrow="تحلیل بدن (نمایشی)"
-        title="نقشه فشار و راحتی بدن"
-        subtitle="این بخش جایگزین ارزیابی پزشکی نیست."
+        eyebrow="تحلیل بدن (تشک اوه)"
+        title="نقشه فشار و راحتی بدن سه‌بعدی"
+        subtitle="این بخش یک نمایش شوروم است و جایگزین ارزیابی پزشکی یا سنسور واقعی نیست. با انگشت یا ماوس بچرخانید."
       />
 
       <div className="grid lg:grid-cols-2 gap-10 items-start">
-        <div className="relative glass rounded-3xl p-8 flex flex-col items-center justify-center gap-6 bg-black/40 overflow-hidden">
-          <span className="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 rounded-tl-md" style={{ borderColor: DEVICE_ACCENT }} />
-          <span className="absolute top-4 right-4 w-6 h-6 border-t-2 border-r-2 rounded-tr-md" style={{ borderColor: DEVICE_ACCENT }} />
-          <span className="absolute bottom-4 left-4 w-6 h-6 border-b-2 border-l-2 rounded-bl-md" style={{ borderColor: DEVICE_ACCENT }} />
-          <span className="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 rounded-br-md" style={{ borderColor: DEVICE_ACCENT }} />
-
-          <div
-            className="absolute inset-0 opacity-10 pointer-events-none"
-            style={{
-              backgroundImage:
-                'linear-gradient(rgba(0,217,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(0,217,255,0.5) 1px, transparent 1px)',
-              backgroundSize: '24px 24px'
-            }}
-          />
+        <div className="relative glass rounded-3xl p-4 flex flex-col items-center justify-center gap-4 bg-black/40 overflow-hidden">
+          <span className="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 rounded-tl-md z-20" style={{ borderColor: DEVICE_ACCENT }} />
+          <span className="absolute top-4 right-4 w-6 h-6 border-t-2 border-r-2 rounded-tr-md z-20" style={{ borderColor: DEVICE_ACCENT }} />
+          <span className="absolute bottom-4 left-4 w-6 h-6 border-b-2 border-l-2 rounded-bl-md z-20" style={{ borderColor: DEVICE_ACCENT }} />
+          <span className="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 rounded-br-md z-20" style={{ borderColor: DEVICE_ACCENT }} />
 
           {phase === 'scanning' ? (
-            <div className="absolute top-6 right-6 flex items-center gap-2 z-10">
+            <div className="absolute top-6 right-6 flex items-center gap-2 z-20">
               <motion.span
                 className="w-2.5 h-2.5 rounded-full bg-red-500"
                 animate={{ opacity: [1, 0.25, 1] }}
@@ -349,166 +327,21 @@ export default function BodyAnalysis() {
           ) : null}
 
           {phase === 'scanning' ? (
-            <div className="absolute top-6 left-6 z-10 text-xs font-mono" style={{ color: DEVICE_ACCENT }}>
+            <div className="absolute top-6 left-6 z-20 text-xs font-mono" style={{ color: DEVICE_ACCENT }}>
               {Math.floor((progress / 100) * 20)}s / 20s
             </div>
           ) : null}
 
           <div className="relative z-10 w-full flex items-stretch gap-3">
-            <div className="flex-1 max-w-md mx-auto h-[220px]">
-              <svg viewBox="0 0 480 200" className="w-full h-full">
-                <defs>
-                  <radialGradient id="heatCold" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="#00D9FF" stopOpacity="0.9" />
-                    <stop offset="60%" stopColor="#2563eb" stopOpacity="0.5" />
-                    <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
-                  </radialGradient>
-                  <radialGradient id="heatMid" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="#4ade80" stopOpacity="0.9" />
-                    <stop offset="60%" stopColor="#facc15" stopOpacity="0.55" />
-                    <stop offset="100%" stopColor="#facc15" stopOpacity="0" />
-                  </radialGradient>
-                  <radialGradient id="heatHot" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
-                    <stop offset="35%" stopColor="#ff3b30" stopOpacity="0.85" />
-                    <stop offset="70%" stopColor="#ff9500" stopOpacity="0.55" />
-                    <stop offset="100%" stopColor="#ff9500" stopOpacity="0" />
-                  </radialGradient>
-                  <linearGradient id="scanLine" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#00D9FF" stopOpacity="0" />
-                    <stop offset="50%" stopColor="#00D9FF" stopOpacity="0.9" />
-                    <stop offset="100%" stopColor="#00D9FF" stopOpacity="0" />
-                  </linearGradient>
-                  <clipPath id="bodyClip">
-                    <path d="M460 100 C460 118 446 128 428 128 C412 128 402 120 396 112 C384 140 360 150 330 150 L220 150 C200 150 184 145 170 138 L60 142 C40 142 24 132 20 116 L80 112 L140 100 L80 88 L20 84 C24 68 40 58 60 58 L170 62 C184 55 200 50 220 50 L330 50 C360 50 384 60 396 88 C402 80 412 72 428 72 C446 72 460 82 460 100 Z" />
-                  </clipPath>
-                  <filter id="xrayGlow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feGaussianBlur stdDeviation="1.6" result="blur" />
-                    <feMerge>
-                      <feMergeNode in="blur" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-                </defs>
-
-                <motion.path
-                  d="M460 100 C460 118 446 128 428 128 C412 128 402 120 396 112 C384 140 360 150 330 150 L220 150 C200 150 184 145 170 138 L60 142 C40 142 24 132 20 116 L80 112 L140 100 L80 88 L20 84 C24 68 40 58 60 58 L170 62 C184 55 200 50 220 50 L330 50 C360 50 384 60 396 88 C402 80 412 72 428 72 C446 72 460 82 460 100 Z"
-                  fill="rgba(150,200,255,0.05)"
-                  stroke="rgba(150,200,255,0.35)"
-                  strokeWidth="1.4"
-                  initial={{ pathLength: 0, opacity: 0 }}
-                  animate={{ pathLength: 1, opacity: 1 }}
-                  transition={{ duration: 1.2, ease: 'easeInOut' }}
-                />
-
-                {phase === 'done' ? (
-                  <motion.g
-                    clipPath="url(#bodyClip)"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.6 }}
-                  >
-                    <circle cx="30" cy="100" r="40" fill="url(#heatCold)" />
-                    <circle cx="88" cy="100" r="42" fill="url(#heatCold)" />
-                    <circle cx="180" cy="100" r="55" fill="url(#heatMid)" />
-                    <circle cx="250" cy="100" r="65" fill="url(#heatHot)" />
-                    <circle cx="320" cy="100" r="60" fill="url(#heatHot)" />
-                    <circle cx="362" cy="100" r="48" fill="url(#heatMid)" />
-                    <circle cx="425" cy="100" r="38" fill="url(#heatCold)" />
-                  </motion.g>
-                ) : (
-                  <motion.g
-                    filter="url(#xrayGlow)"
-                    stroke="#BFE9FF"
-                    strokeWidth="1.6"
-                    fill="none"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 0.85 }}
-                    transition={{ duration: 1, delay: 0.4 }}
-                  >
-                    <ellipse cx="430" cy="100" rx="26" ry="20" />
-                    <path d="M412 84 Q400 100 412 116" />
-                    <line x1="402" y1="100" x2="388" y2="100" />
-
-                    {ribRows.map(function (y, i) {
-                      var spread = 26 + i * 2;
-                      var x = 480 - y;
-                      var ctrlX = 472 - y;
-                      return (
-                        <path
-                          key={'rib-' + i}
-                          d={'M ' + x + ' ' + (100 - spread) + ' Q ' + ctrlX + ' 100 ' + x + ' ' + (100 + spread)}
-                        />
-                      );
-                    })}
-
-                    <path d="M184 62 Q148 100 184 138 Q164 100 184 62 Z" strokeWidth="1.4" />
-                    <circle cx="180" cy="80" r="5" />
-                    <circle cx="180" cy="120" r="5" />
-
-                    <line x1="382" y1="64" x2="330" y2="58" />
-                    <line x1="330" y1="58" x2="275" y2="55" />
-                    <circle cx="330" cy="58" r="4" />
-                    <line x1="382" y1="136" x2="330" y2="142" />
-                    <line x1="330" y1="142" x2="275" y2="145" />
-                    <circle cx="330" cy="142" r="4" />
-
-                    <line x1="175" y1="80" x2="88" y2="88" />
-                    <line x1="175" y1="120" x2="88" y2="112" />
-                    <circle cx="88" cy="88" r="4" />
-                    <circle cx="88" cy="112" r="4" />
-                    <line x1="88" y1="88" x2="28" y2="92" />
-                    <line x1="88" y1="112" x2="28" y2="108" />
-                    <line x1="26" y1="84" x2="26" y2="100" />
-                    <line x1="26" y1="100" x2="26" y2="116" />
-
-                    {spineTicks.map(function (y, i) {
-                      var x = 480 - y;
-                      return <line key={'vert-' + i} x1={x} y1="92" x2={x} y2="108" />;
-                    })}
-                    <line x1="388" y1="100" x2="164" y2="100" strokeWidth="1.2" />
-                  </motion.g>
-                )}
-
-                {phase === 'done' ? (
-                  <line x1="20" y1="100" x2="460" y2="100" stroke="#ffffff" strokeWidth="1.5" strokeDasharray="2 4" opacity="0.85" />
-                ) : null}
-
-                {phase === 'scanning' ? (
-                  <g>
-                    {pressurePoints.map(function (p) {
-                      var revealed = scanX >= p.cx;
-                      if (!revealed) {
-                        return null;
-                      }
-                      return (
-                        <motion.circle
-                          key={p.id}
-                          cx={p.cx}
-                          cy={p.cy}
-                          r={p.r}
-                          fill="url(#heatMid)"
-                          initial={{ opacity: 0, scale: 0.5 }}
-                          animate={{ opacity: [0.4, 0.9, 0.4], scale: [0.9, 1.1, 0.9] }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                        />
-                      );
-                    })}
-                  </g>
-                ) : null}
-
-                {phase === 'scanning' ? (
-                  <rect x={scanX - 13} y={10} width={26} height={180} fill="url(#scanLine)" />
-                ) : null}
-              </svg>
+            <div className="flex-1 h-[380px]">
+              <BodyScan3D phase={phase} progress={progress} concern={concern} />
             </div>
 
             <div className="flex flex-col items-center gap-1 w-10 shrink-0">
               <div
                 className="w-2.5 flex-1 rounded-full border border-white/10"
                 style={{
-                  background:
-                    'linear-gradient(to top, #2563eb, #00D9FF, #4ade80, #facc15, #ff9500, #ff3b30, #ffffff)'
+                  background: 'linear-gradient(to top, #2563eb, #00D9FF, #4ade80, #facc15, #ff9500, #ff3b30, #ffffff)'
                 }}
               />
               <span className="text-[10px] text-ash mt-1">فشار</span>
@@ -728,7 +561,7 @@ export default function BodyAnalysis() {
       </div>
 
       <p className="text-center text-ash/60 text-xs mt-10 max-w-xl mx-auto">
-      
+        .
       </p>
     </div>
   );
